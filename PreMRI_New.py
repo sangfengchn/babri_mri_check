@@ -7,8 +7,11 @@ LastEditors: SANGF
 LastEditTime: 2021-08-29 11:18:07
 '''
 import os
+from os.path import join as opj
+import re
 import tarfile
 import gzip
+import time
 import shutil
 import pydicom
 import numpy as np
@@ -16,11 +19,10 @@ import pandas as pd
 from pypinyin import pinyin, Style
 import logging
 import datetime
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
-def get_pinyin_of_name(tmp_name):
+def fun_Convert2Pinyin(tmp_name):
     # convert chinese name to pinyin name.
-    # logging.info(f'Convert {tmp_name} to pinyin...')
-
     tmp_py_list = pinyin(tmp_name, heteronym=True, style=Style.NORMAL)
     multi_pinyin = []
     for item in tmp_py_list:
@@ -37,13 +39,13 @@ def get_pinyin_of_name(tmp_name):
             multi_pinyin.append(tmp_list)
     return multi_pinyin[-1]
 
-def untar(file_path, out_root):
+def fun_untar(file_path, out_root):
     # unpack .tar.gz file.
-    logging.info(f'Unpacked {file_path}...')
-
+    logging.info(f'In fun_untar: {file_path}')
+    
     file_name = os.path.split(file_path)[-1]
     file = file_name.replace('.tar.gz', '')
-    out_path = os.path.join(out_root, file)
+    out_path = opj(out_root, file)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     tar = tarfile.open(file_path, 'r:gz')
@@ -56,7 +58,7 @@ def untar(file_path, out_root):
         if a == out_path:
             continue
         for i in c:
-            tmp_path = os.path.join(a, i)
+            tmp_path = opj(a, i)
             shutil.move(tmp_path, out_path)
         os.removedirs(a)
 
@@ -64,12 +66,13 @@ def untar(file_path, out_root):
     return out_path
 
 
-def sorted(file_path):
+def fun_sorted(file_path):
     # sorted the dicom files into different series.
-    logging.info(f'Sorted {file_path}...')
+    logging.info(f'In fun_sorted: {file_path}')
 
+    # file_name = os.path.split(file_path)[-1]
     for i in os.listdir(file_path):
-        dcm_file = os.path.join(file_path, i)
+        dcm_file = opj(file_path, i)
         ds = pydicom.dcmread(dcm_file)
         # series name
         series_name = ds[0x0018, 0x1030].value
@@ -77,26 +80,26 @@ def sorted(file_path):
         # series id
         series_id = ds[0x0020, 0x0011].value
         # out_path is a series path.
-        out_path = os.path.join(file_path, f'{int(series_id):04d}_{series_name}')
+        out_path = opj(file_path, f'{int(series_id):04d}_{series_name}')
         if not os.path.exists(out_path):
             os.makedirs(out_path)
-        shutil.move(os.path.join(file_path, i), out_path)
+        shutil.move(opj(file_path, i), out_path)
 
 
-def tar(file_path, out_file):
+def fun_tar(file_path, out_file):
     # tar the file into a .tar.gz file.
-    logging.info(f'Pack {file_path}...')
+    logging.info(f'In fun_tar: {file_path}')
 
     tar = tarfile.open(out_file, 'w:gz')
     for a, _, c in os.walk(file_path):
         for i in c:
-            tar.add(os.path.join(a, i), arcname=i)
+            tar.add(opj(a, i), arcname=i)
     tar.close()
 
 
-def mv(file_path, out_root, machine='OLD'):
+def fun_move(file_path, out_root, machine='OLD'):
     # move series floder to floder same as backup data.
-    logging.info(f'Move {file_path} into {out_root}')
+    logging.info(f'In fun_move: {file_path} into {out_root}')
 
     file_name = os.path.split(file_path)[-1]
     
@@ -116,10 +119,7 @@ def mv(file_path, out_root, machine='OLD'):
         squences = {
             't1_mprage_sag_1x1x1_p2_20ch': "T1",
             'bold_64x64_s2_3x3x3p5_tr1000_fa70': "REST",
-            'bold_80x80_s2_2_5iso_tr2000': "REST",
-            'bold_80x80_s2_2_5iso_tr2s_RS': "REST",
-            'bold_80x80_s2_2_5iso_tr2s_195': "SpatialTask",
-            'bold_80x80_s2_2_5iso_tr2s_240': "SpatialTask",
+            'bold_80x80_s2_2.5iso_tr2000': "REST",
             'DTI_BP_64_2x2x2_s2_p2_6-8': "DTI",
             'field_mapping_2x2x2_for_DTI': "DTI",
             'AAHead_Scout': "AAHead_Scout",
@@ -136,39 +136,39 @@ def mv(file_path, out_root, machine='OLD'):
     for i in os.listdir(file_path):
         series_name = i[5:]
         if series_name in squences.keys():
-            tmp_src_path = os.path.join(file_path, i)
-            tmp_dst_path = os.path.join(out_root, squences[series_name], file_name)
+            tmp_src_path = opj(file_path, i)
+            tmp_dst_path = opj(out_root, squences[series_name], file_name)
             if not os.path.exists(tmp_dst_path):
                 os.makedirs(tmp_dst_path)
             for j in os.listdir(tmp_src_path): 
-                shutil.copy(os.path.join(tmp_src_path, j), os.path.join(tmp_dst_path, j))
+                shutil.copy(opj(tmp_src_path, j), opj(tmp_dst_path, j))
     shutil.rmtree(file_path)
 
     for _, v in squences.items():
-        floder_path = os.path.join(out_root, v, file_name)
+        floder_path = opj(out_root, v, file_name)
         if os.path.exists(floder_path):
             # pack file to save space of disk.
             if os.path.exists(f'{floder_path}.tar.gz'):
                 os.remove(f'{floder_path}.tar.gz')
-            tar(floder_path, f'{floder_path}.tar.gz')
+            fun_tar(floder_path, f'{floder_path}.tar.gz')
             shutil.rmtree(floder_path)
 
     # return packed file path.
     return file_name
 
 
-def get_df_index(df, date, name):
+def fun_GetIndex(df, date, name):
     # to find the id of mri file in subject information table.
-    logging.info(f'Searching the index of {date}-{name}...')
+    # logging.info(f'Searching the index of {date}-{name}...')
 
     res = None
     target = f'{date}{name}'
     for i in df.index.values:
-        if df.loc[i, 'CheckDateName']=='yes':
-            continue
+        # if df.loc[i, 'CheckDateName']=='yes':
+        #     continue
         tmp_date = df.loc[i, '时间']
         tmp_name = df.loc[i, '姓名']
-        for tmp_name_pinyin in get_pinyin_of_name(tmp_name):
+        for tmp_name_pinyin in fun_Convert2Pinyin(tmp_name):
             current = f'{int(tmp_date)}{tmp_name_pinyin}'.upper()
             if current == target:
                 res = [i, tmp_date, tmp_name_pinyin.upper()]
@@ -179,18 +179,19 @@ def get_df_index(df, date, name):
     return res
 
 
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     
     # save results
-    src = 'New_Raw'
-    tmp = 'New_ResTmp'
-    dst = 'New_Res'
-    check = 'New_CheckRes'
+    proj = os.path.abspath('.')
+    src = opj(proj, 'New_Raw')
+    tmp = opj(proj, 'New_ResTmp')
+    dst = opj(proj, 'New_Res')
+    check = opj(proj, 'New_CheckRes')
     table_file = '师大核磁人员情况新_20230716.xls'
 
     # subject information file
-    logging.info('Load the subject information table.')
     newDf = pd.read_excel(os.path.join('0.List', table_file), sheet_name='Sheet2', header=0)
     newDf['CheckDateName'] = ['no']*len(newDf)
 
@@ -202,10 +203,10 @@ if __name__ == "__main__":
         date = tmp_file_name.split('_')[0]
         name = tmp_file_name.split('_')[-1].upper()
 
-        res_index = get_df_index(newDf, date, name)
+        res_index = fun_GetIndex(newDf, date, name)
         if not res_index:
             # save image file in log, because it is not in subject file.
-            logging.warn(f'{i} is not in subject file.')
+            logging.warning(f'Not in list: {i}')
             continue
 
         index = res_index[0]
@@ -217,17 +218,17 @@ if __name__ == "__main__":
         new_file_name = f'{newDf.loc[index, "序号"]}{name_pinyin}'.upper()
 
         # untar
-        sub_path = untar(os.path.join(src, i), tmp)
+        sub_path = fun_untar(os.path.join(src, i), tmp)
 
         # rename
         new_path = os.path.join(tmp, f'{new_file_name}')
         os.rename(sub_path, new_path)
 
         # sorted
-        sorted(new_path)
+        fun_sorted(new_path)
 
         # move & tar
-        tar_name = mv(new_path, dst, machine='New')
+        tar_name = fun_move(new_path, dst, machine='New')
 
         # Check series 
         # for T1
@@ -321,5 +322,5 @@ if __name__ == "__main__":
 
     # to save check result file.
     now_date = datetime.datetime.now().strftime('%Y%m%d')
-
     newDf.to_excel(os.path.join(check, f'Checked_{now_date}_{table_file}'))
+    logging.info("Done.")
