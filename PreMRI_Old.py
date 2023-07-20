@@ -218,18 +218,20 @@ if __name__ == "__main__":
 
         # untar
         sub_path = fun_untar(opj(src, i), tmp)
+        time.sleep(1)
 
         # rename
         new_path = opj(tmp, f'{new_file_name}')
         os.rename(sub_path, new_path)
-        # time.sleep(1)
+        time.sleep(1)
 
         # sorted
         fun_sorted(new_path)
-        # time.sleep(1)
+        time.sleep(1)
 
         # move & tar
         tar_name = fun_move(new_path, dst)
+        time.sleep(1)
 
         # Check series 
         # for T1
@@ -286,8 +288,8 @@ if __name__ == "__main__":
         oldDf.loc[index, 'CheckSeries_A'] = res_check_series_a
 
         # delete the correct data.
-        if res_check_series == 'yes':
-            os.remove(opj(src, i))
+        # if res_check_series == 'yes':
+        #     os.remove(opj(src, i))
 
     # to save check result file.
     now_date = datetime.datetime.now().strftime('%Y%m%d')

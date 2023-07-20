@@ -197,7 +197,7 @@ if __name__ == "__main__":
 
 
     for i in os.listdir(src):
-        logging.info(f'For {i}...')
+        logging.info(f'\n\n{i}')
         # split date and name from file name.
         tmp_file_name = i.replace('.tar.gz', '')
         date = tmp_file_name.split('_')[0]
@@ -219,17 +219,21 @@ if __name__ == "__main__":
 
         # untar
         sub_path = fun_untar(os.path.join(src, i), tmp)
-
+        time.sleep(1)
+        
         # rename
         new_path = os.path.join(tmp, f'{new_file_name}')
         os.rename(sub_path, new_path)
-
+        time.sleep(1)
+        
         # sorted
         fun_sorted(new_path)
-
+        time.sleep(1)
+        
         # move & tar
         tar_name = fun_move(new_path, dst, machine='New')
-
+        time.sleep(1)
+        
         # Check series 
         # for T1
         res_check_series = 'yes'
@@ -317,8 +321,8 @@ if __name__ == "__main__":
         newDf.loc[index, 'CheckSeries'] = res_check_series
         newDf.loc[index, 'CheckSeries_A'] = res_check_series_a
 
-        if res_check_series == 'yes':
-            os.remove(os.path.join(src, i))
+        # if res_check_series == 'yes':
+        #     os.remove(os.path.join(src, i))
 
     # to save check result file.
     now_date = datetime.datetime.now().strftime('%Y%m%d')
