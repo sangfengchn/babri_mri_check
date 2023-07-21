@@ -119,7 +119,7 @@ def fun_move(file_path, out_root, machine='OLD'):
         squences = {
             't1_mprage_sag_1x1x1_p2_20ch': "T1",
             'bold_64x64_s2_3x3x3p5_tr1000_fa70': "REST",
-            'bold_80x80_s2_2.5iso_tr2000': "REST",
+            'bold_80x80_s2_2_5iso_tr2000': "REST",
             'DTI_BP_64_2x2x2_s2_p2_6-8': "DTI",
             'field_mapping_2x2x2_for_DTI': "DTI",
             'AAHead_Scout': "AAHead_Scout",
@@ -321,9 +321,9 @@ if __name__ == "__main__":
         newDf.loc[index, 'CheckSeries'] = res_check_series
         newDf.loc[index, 'CheckSeries_A'] = res_check_series_a
 
-        # if res_check_series == 'yes':
-        #     os.remove(os.path.join(src, i))
-
+        if res_check_series == 'yes':
+            os.remove(os.path.join(src, i))
+        
     # to save check result file.
     now_date = datetime.datetime.now().strftime('%Y%m%d')
     newDf.to_excel(os.path.join(check, f'Checked_{now_date}_{table_file}'))
