@@ -184,7 +184,7 @@ if __name__ == "__main__":
     # save results
     proj = os.path.abspath('.')
     src = opj(proj, 'Old_Raw')
-    tmp = opj(proj, 'Old_ResTmp')
+    tmp = opj(proj, 'Old_ResTmp') 
     dst = opj(proj, 'Old_Res')
     check = opj(proj, 'Old_CheckRes')
     table_file = '师大核磁人员情况新_20230716.xls'
@@ -230,6 +230,7 @@ if __name__ == "__main__":
         time.sleep(1)
 
         # move & tar
+        
         tar_name = fun_move(new_path, dst)
         time.sleep(1)
 
@@ -288,10 +289,10 @@ if __name__ == "__main__":
         oldDf.loc[index, 'CheckSeries_A'] = res_check_series_a
 
         # delete the correct data.
-        # if res_check_series == 'yes':
-        #     os.remove(opj(src, i))
+        if res_check_series == 'yes':
+            os.remove(opj(src, i))
 
     # to save check result file.
     now_date = datetime.datetime.now().strftime('%Y%m%d')
-    oldDf.to_excel(opj(check, f'Checked_{now_date}_{table_file}'))
+    oldDf.to_excel(opj(check, f'Checked_{now_date}_{table_file.replace(".xls", ".xlsx")}'))
     logging.info("Done.")
