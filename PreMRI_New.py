@@ -192,7 +192,7 @@ if __name__ == "__main__":
     tmp = opj(proj, 'New_ResTmp')
     dst = opj(proj, 'New_Res')
     check = opj(proj, 'New_CheckRes')
-    table_file = '师大核磁人员情况新_20230716.xls'
+    table_file = '师大核磁人员情况新_20231009.xls'
 
     # subject information file
     newDf = pd.read_excel(os.path.join('0.List', table_file), sheet_name='Sheet2', header=0)
